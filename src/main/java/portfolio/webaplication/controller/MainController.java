@@ -1,6 +1,7 @@
 package portfolio.webaplication.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import portfolio.webaplication.dto.MemberDTO;
+import portfolio.webaplication.model.KakaoProfile;
 import portfolio.webaplication.model.OAuthToken;
 import portfolio.webaplication.service.MemberService;
 
@@ -43,6 +45,62 @@ public class MainController {
         return "login";
     }
 
+    //    @GetMapping("/kakao/callback")
+//    public @ResponseBody String kakaoCallbakc(String code) {
+//        RestTemplate rt = new RestTemplate();
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+//
+//        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("grant_type", "authorization_code");
+//        params.add("client_id", "05069a23f2a3b2bf5fb06484c8fd62f9");
+//        params.add("redirect_uri", "http://localhost:8080/main/kakao/callback");
+//        params.add("code", code);
+//
+//        HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest = new HttpEntity<>(params, headers);
+//
+//        ResponseEntity<String> response = rt.exchange(
+//                "https://kauth.kakao.com/oauth/token",
+//                HttpMethod.POST,
+//                kakaoTokenRequest,
+//                String.class
+//        );
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        OAuthToken oAuthToken = null;
+//        try {
+//            oAuthToken = objectMapper.readValue(response.getBody(), OAuthToken.class);
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println("카카오 엑세스 토큰 : " + oAuthToken.getAccess_token());
+//
+//        RestTemplate rt2 = new RestTemplate();
+//        HttpHeaders headers2 = new HttpHeaders();
+//        headers2.add("Authorization", "Bearer " + oAuthToken.getAccess_token());
+//        headers2.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+//
+//        HttpEntity<MultiValueMap<String, String>> kakaoProfileRequest = new HttpEntity<>(headers2);
+//
+//        ResponseEntity<String> response2 = rt2.exchange(
+//                "https://kapi.kakao.com/v2/user/me",
+//                HttpMethod.POST,
+//                kakaoProfileRequest,
+//                String.class
+//        );
+//
+//        ObjectMapper objectMapper2 = new ObjectMapper();
+//        KakaoProfile kakaoProfile = null;
+//        try {
+//            kakaoProfile = objectMapper2.readValue(response2.getBody(), KakaoProfile.class);
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//
+//        System.out.println(kakaoProfile.getId());
+//        System.out.println(kakaoProfile.getKakao_account().getEmail());
+//        return response2.getBody();
+//    }
     @GetMapping("/kakao/callback")
     public @ResponseBody String kakaoCallbackGet(@RequestParam("code") String code) {
         OAuthToken oAuthToken = getKakaoAccessToken(code);
@@ -114,6 +172,18 @@ public class MainController {
                 kakaoProfileRequest,
                 String.class
         );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        KakaoProfile kakaoProfile = null;
+
+        try {
+            kakaoProfile = objectMapper.readValue(response.getBody(), KakaoProfile.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(kakaoProfile.getId());
+        System.out.println(kakaoProfile.getKakao_account().getEmail());
 
         return response.getBody();
     }
